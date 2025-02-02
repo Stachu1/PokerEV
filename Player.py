@@ -33,7 +33,10 @@ class Player:
     
     def __str__(self):
         games = self.wins + self.ties + self.losses
-        return f"No gmaes played yet" if games == 0 else f"WR: {100*self.wins/games:.2f}% ({100*self.ties/games:.2f}%)   "
+        if games == 0:
+            return f"{Fore.RED}No gmaes played yet{Fore.RESET}"
+        else:
+            return f"{Fore.LIGHTGREEN_EX}{100*self.wins/games:.2f}% {Fore.LIGHTYELLOW_EX}{100*self.ties/games:.2f}% {Fore.LIGHTRED_EX}{100*self.losses/games:.2f}%{Fore.RESET}   "
     
     
     def get_score(self, community_cards):
