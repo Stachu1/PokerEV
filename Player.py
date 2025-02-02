@@ -28,11 +28,12 @@ class Player:
         self.wins = 0
         self.ties = 0
         self.losses = 0
+        self.ranks = [0]*10
     
     
     def __str__(self):
         games = self.wins + self.ties + self.losses
-        return f"No gmaes played yet" if games == 0 else f"WR: {100*self.wins/games:.0f}% ({100*self.ties/games:.0f}%)   "
+        return f"No gmaes played yet" if games == 0 else f"WR: {100*self.wins/games:.2f}% ({100*self.ties/games:.2f}%)   "
     
     
     def get_score(self, community_cards):
@@ -57,12 +58,15 @@ class Player:
 
         if straight_flush:
             if high_straight_flush == 14:  # Royal Flush
+                self.ranks[9] += 1
                 return ("royal_flush", 14, [])
+            self.ranks[8] += 1
             return ("straight_flush", high_straight_flush, [])
 
         if counts[0] == 4:
             quad_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 4][0]]
             kicker = max(r for r in unique_ranks if r != quad_rank)
+            self.ranks[7] += 1
             return ("four_of_a_kind", quad_rank, [kicker])
 
         triplets = [r for r in rank_counts if rank_counts[r] == 3]
@@ -72,29 +76,36 @@ class Player:
             highest_triplet = triplet_ranks[0]
             remaining_pairs = triplet_ranks[1:] + sorted([RANK_VALUES[r] for r in pairs], reverse=True)
             if remaining_pairs:
+                self.ranks[6] += 1
                 return ("full_house", highest_triplet, [remaining_pairs[0]])
 
         if flush:
+            self.ranks[5] += 1
             return ("flush", max(flush_ranks), flush_ranks)
 
         if straight:
+            self.ranks[4] += 1
             return ("straight", high_straight, [])
 
         if counts[0] == 3:
             set_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 3][0]]
             kickers = sorted((r for r in unique_ranks if r != set_rank), reverse=True)[:2]
+            self.ranks[3] += 1
             return ("three_of_a_kind", set_rank, kickers)
 
         if counts[0] == 2 and counts[1] == 2:
             pair_ranks = sorted((RANK_VALUES[r] for r in rank_counts if rank_counts[r] == 2), reverse=True)
             kicker = max(r for r in unique_ranks if r not in pair_ranks)
+            self.ranks[2] += 1
             return ("two_pair", pair_ranks[0], [pair_ranks[1], kicker])
 
         if counts[0] == 2:
             pair_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 2][0]]
             kickers = sorted((r for r in unique_ranks if r != pair_rank), reverse=True)[:3]
+            self.ranks[1] += 1
             return ("one_pair", pair_rank, kickers)
 
+        self.ranks[0] += 1
         return ("high_card", max(unique_ranks), unique_ranks[:5])
     
     
