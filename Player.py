@@ -41,8 +41,8 @@ class Player:
         score = HAND_RANKS[hand_type] * 100 + main_value * 7
         score += sum(k * (0.7 * 10 ** (-i)) for i, k in enumerate(kickers))  # Kickers for tie-breakers
         return score
-    
-    
+
+
     def classify_hand(self, cards):
         parsed_cards = self.parse_cards(cards)
         ranks = [r for r, s in parsed_cards]
@@ -51,33 +51,45 @@ class Player:
         counts = sorted(rank_counts.values(), reverse=True)
         unique_ranks = sorted((RANK_VALUES[r] for r in rank_counts), reverse=True)
 
+        straight_flush, high_straight_flush = self.is_straight_flush(parsed_cards)
         flush, flush_ranks = self.is_flush(parsed_cards)
         straight, high_straight = self.is_straight(ranks)
 
-        if flush and straight:
-            if high_straight == 14:  # Royal Flush
+        if straight_flush:
+            if high_straight_flush == 14:  # Royal Flush
                 return ("royal_flush", 14, [])
-            return ("straight_flush", high_straight, [])
+            return ("straight_flush", high_straight_flush, [])
+
         if counts[0] == 4:
             quad_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 4][0]]
             kicker = max(r for r in unique_ranks if r != quad_rank)
             return ("four_of_a_kind", quad_rank, [kicker])
-        if counts[0] == 3 and counts[1] >= 2:
-            set_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 3][0]]
-            pair_rank = max(RANK_VALUES[r] for r in rank_counts if rank_counts[r] >= 2 and RANK_VALUES[r] != set_rank)
-            return ("full_house", set_rank, [pair_rank])
+
+        triplets = [r for r in rank_counts if rank_counts[r] == 3]
+        pairs = [r for r in rank_counts if rank_counts[r] == 2]
+        if triplets:
+            triplet_ranks = sorted([RANK_VALUES[r] for r in triplets], reverse=True)
+            highest_triplet = triplet_ranks[0]
+            remaining_pairs = triplet_ranks[1:] + sorted([RANK_VALUES[r] for r in pairs], reverse=True)
+            if remaining_pairs:
+                return ("full_house", highest_triplet, [remaining_pairs[0]])
+
         if flush:
             return ("flush", max(flush_ranks), flush_ranks)
+
         if straight:
             return ("straight", high_straight, [])
+
         if counts[0] == 3:
             set_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 3][0]]
             kickers = sorted((r for r in unique_ranks if r != set_rank), reverse=True)[:2]
             return ("three_of_a_kind", set_rank, kickers)
+
         if counts[0] == 2 and counts[1] == 2:
             pair_ranks = sorted((RANK_VALUES[r] for r in rank_counts if rank_counts[r] == 2), reverse=True)
             kicker = max(r for r in unique_ranks if r not in pair_ranks)
             return ("two_pair", pair_ranks[0], [pair_ranks[1], kicker])
+
         if counts[0] == 2:
             pair_rank = RANK_VALUES[[r for r in rank_counts if rank_counts[r] == 2][0]]
             kickers = sorted((r for r in unique_ranks if r != pair_rank), reverse=True)[:3]
@@ -113,11 +125,24 @@ class Player:
 
         # Check for standard straight
         for i in range(len(rank_indices) - 4):
-            if rank_indices[i + 4] - rank_indices[i] == 4:
+            if rank_indices[i] - rank_indices[i+4] == 4:
                 return True, rank_indices[i]
 
         # Special case: A-2-3-4-5
         if set([14, 2, 3, 4, 5]).issubset(rank_indices):
             return True, 5
 
+        return False, None
+
+
+    def is_straight_flush(self, cards):
+        suits = [card[1] for card in cards]
+        suit_counts = Counter(suits)
+        for suit, count in suit_counts.items():
+            if count >= 5:
+                suited_cards = [card for card in cards if card[1] == suit]
+                suited_ranks = [card[0] for card in suited_cards]
+                straight, high_card = self.is_straight(suited_ranks)
+                if straight:
+                    return True, high_card
         return False, None
