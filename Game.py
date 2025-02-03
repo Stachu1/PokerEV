@@ -17,10 +17,12 @@ SPADES = "♠️"
 
 
 class Game:
-    def __init__(self, player, num_other_players=1, community_cards=[]):
+    def __init__(self, player, num_other_players=1, community_cards=[], pot=0, to_call=0):
         self.player = player
         self.num_other_players = num_other_players
         self.community_cards = community_cards
+        self.pot = pot
+        self.to_call = to_call
     
     
     def deal_community_cards(self):

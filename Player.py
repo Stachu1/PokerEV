@@ -29,14 +29,28 @@ class Player:
         self.ties = 0
         self.losses = 0
         self.ranks = [0]*10
+        self.ev = None
     
     
     def __str__(self):
         games = self.wins + self.ties + self.losses
         if games == 0:
-            return f"{Fore.RED}No gmaes played yet{Fore.RESET}"
+            return f"{Fore.RED}No games played yet{Fore.RESET}"
         else:
-            return f"{Fore.LIGHTGREEN_EX}{100*self.wins/games:.2f}% {Fore.LIGHTYELLOW_EX}{100*self.ties/games:.2f}% {Fore.LIGHTRED_EX}{100*self.losses/games:.2f}%{Fore.RESET}   "
+            color = Fore.RED if self.ev < 0 else Fore.LIGHTGREEN_EX
+            return f"{Fore.LIGHTYELLOW_EX}EV: {color}{self.ev:.2f} {Fore.RESET}[{Fore.LIGHTGREEN_EX}{100*self.wins/games:.2f}% {Fore.LIGHTYELLOW_EX}{100*self.ties/games:.2f}% {Fore.LIGHTRED_EX}{100*self.losses/games:.2f}%{Fore.RESET}]   "
+
+
+    def update_ev(self, pot, to_call):
+        games = self.wins + self.ties + self.losses
+        if games == 0:
+            return None
+        else:
+            win_rate = self.wins/games
+            tie_rate = self.ties/games
+            loss_rate = self.losses/games
+            self.ev = win_rate * pot + tie_rate * pot/2 - loss_rate * to_call
+            return self.ev
     
     
     def get_score(self, community_cards):
