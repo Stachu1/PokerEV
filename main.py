@@ -8,15 +8,20 @@ init()
 iterations = int(argv[1]) if len(argv) > 1 else 200000
 num_other_players = int(input(f"{Fore.MAGENTA}Number players: {Fore.RESET}")) - 1
 
+hand = []
+community_cards = []
 
 try:
     while True:
         print(f"{Fore.BLUE}{"="*22}")
         hand_input = input(f"{Fore.CYAN}Hand(unchanged): {Fore.RESET}")
+        community_cards = [] if len(hand_input) > 0 else community_cards
         hand = hand_input.split(" ") if len(hand_input) > 0 else hand
 
         community_cards_input = input(f"{Fore.CYAN}Community cards: {Fore.RESET}")
-        community_cards = community_cards_input.split(" ") if community_cards_input != "" else []
+        next_community_card = community_cards_input.split(" ") if community_cards_input != "" else []
+        community_cards = next_community_card if len(community_cards) == 5 else community_cards + next_community_card
+        print(f"{community_cards}")
 
         player = Player(hand)
         game = Game(player, num_other_players=num_other_players, community_cards=community_cards)
